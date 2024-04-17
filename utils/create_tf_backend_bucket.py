@@ -5,6 +5,16 @@ import boto3
 
 
 def create_tf_backend_bucket():
+    """A function to create an s3 bucket in AWS to hold terraform backend.
+    User will be prompted to inpute bucket name into console.
+    A bucket will then be created with that name in the configured AWS account.
+
+    Raises:
+        b1: BucketAlreadyOwnedByYou - if a bucket with given name already exists in AWS account.
+        b2: BucketAlreadyExists - if a bucket with the given name already exists.
+        c: ClientError - if the given bucket name is too long or short.
+        p: ParamValidationError - if the given bucket name fails AWS regex check.
+    """
 
     bucket_name = input("Please enter name for terraform backend bucket: ")
 
