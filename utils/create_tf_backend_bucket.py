@@ -1,16 +1,47 @@
 """This module contains the definition for `create_tf_backend_bucket()`."""
 
-from pprint import pprint
-
+import botocore
 import boto3
+
 
 def create_tf_backend_bucket():
 
     bucket_name = input("Please enter name for terraform backend bucket: ")
 
     s3 = boto3.client("s3", region_name="eu-west-2")
-    
-    response = s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": "eu-west-2"})
-    
-    if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
-        print(f"✅ {bucket_name} successfully created.")
+
+    try:
+        response = s3.create_bucket(
+            Bucket=bucket_name,
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+        )
+
+        if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
+            print(f"✅ {bucket_name} successfully created.")
+
+    except s3.exceptions.BucketAlreadyOwnedByYou as b1:
+        print(f"❌ {bucket_name} already owned by you - please try again.")
+        raise b1
+
+    except s3.exceptions.BucketAlreadyExists as b2:
+        print(f"❌ {bucket_name} already exists - please try again.")
+        raise b2
+
+    except botocore.exceptions.ClientError as c:
+        if "InvalidBucketName" in str(c):
+            print(f"❌ `{bucket_name}` is not a valid bucket name - please try again.")
+            print(
+                "https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html"
+            )
+            raise c
+
+    except botocore.exceptions.ParamValidationError as p:
+        print(f"❌ `{bucket_name}` contains invalid characters - please try again.")
+        print(
+            "https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html"
+        )
+        raise p
+
+
+if __name__ == "__main__":
+    create_tf_backend_bucket()
