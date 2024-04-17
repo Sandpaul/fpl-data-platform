@@ -6,8 +6,9 @@ import boto3
 
 def create_tf_backend_bucket():
     """A function to create an s3 bucket in AWS to hold terraform backend.
-    User will be prompted to inpute bucket name into console.
-    A bucket will then be created with that name in the configured AWS account.
+    - User will be prompted to inpute bucket name into console.
+    - A bucket will then be created with that name in the configured AWS account.
+    - Bucket versioning is then enabled in the created bucket.
 
     Raises:
         b1: BucketAlreadyOwnedByYou - if a bucket with given name already exists in AWS account.
@@ -25,6 +26,10 @@ def create_tf_backend_bucket():
             Bucket=bucket_name,
             CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
         )
+
+        s3 = boto3.resource("s3")
+        versioning = s3.BucketVersioning(bucket_name)
+        versioning.enable()
 
         if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
             print(f"✅ {bucket_name} successfully created.")

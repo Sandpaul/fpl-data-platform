@@ -28,6 +28,13 @@ def mock_s3(aws_credentials):
         yield boto3.client("s3", region_name="eu-west-2")
 
 
+@pytest.fixture
+def mock_s3_resource(aws_credentials):
+    """Mock s3 resource."""
+    with mock_aws():
+        yield boto3.resource("s3")
+
+
 @pytest.mark.describe("create_tf_backend_bucket()")
 @pytest.mark.it("should create s3 bucket with name input by user")
 @patch("builtins.input", side_effect=["test-tf-backend-bucket"])
@@ -64,3 +71,12 @@ def test_invalid_bucket_name(mock_input, mock_s3):
 def test_invalid_characters(mock_input, mock_s3):
     with pytest.raises(botocore.exceptions.ParamValidationError):
         create_tf_backend_bucket()
+
+
+@pytest.mark.describe("create_tf_backend_bucket()")
+@pytest.mark.it("should enable versioning on created bucket")
+@patch("builtins.input", side_effect=["test-tf-backend-bucket"])
+def test_enables_versioning(mock_input, mock_s3, mock_s3_resource):
+    create_tf_backend_bucket()
+    versioning = mock_s3_resource.BucketVersioning("test-tf-backend-bucket")
+    assert versioning.status == "Enabled"
